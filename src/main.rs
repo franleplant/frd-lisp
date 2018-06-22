@@ -53,6 +53,7 @@ fn lex(src: &str) -> Vec<Token> {
     while index < chars.len() {
         let c = chars[index];
         if c.is_whitespace() {
+            index += 1;
             continue
         }
 
@@ -67,9 +68,9 @@ fn lex(src: &str) -> Vec<Token> {
             candidates = next_candidates;
             next_candidates = vec![];
 
+            let lexeme = String::from_iter(&chars[start..index + 1]);
+            println!("lexeme {}", lexeme);
             for (token_kind, nfa) in &TOKEN_CONFIG {
-                let lexeme = String::from_iter(&chars[start..index + 1]);
-                println!("lexeme {}", lexeme);
 
                 let res = nfa(&lexeme);
                 match res {
@@ -85,16 +86,18 @@ fn lex(src: &str) -> Vec<Token> {
 
             index += 1;
         }
-        println!("out {}", index);
 
-        index -= 1;
+        index -= 2;
+        println!("out {}", index);
 
         assert!(candidates.len() > 0, "asdjhasd");
         let lexeme = String::from_iter(&chars[start..index + 1]);
         let token_kind = candidates[0].clone();
         let token = Token { kind: token_kind, lexeme: lexeme.to_string()};
         println!("token {:?}", token);
-        tokens.push(token)
+        tokens.push(token);
+
+        index += 1;
     }
 
     return tokens
