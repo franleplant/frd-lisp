@@ -9,17 +9,80 @@ enum NFAResult {
 
 fn nfa_par_open(src: &str) -> NFAResult {
     if src == "(" {
-        return NFAResult::Accepted
+        return NFAResult::Accepted;
     } else {
-        return NFAResult::Trapped
+        return NFAResult::Trapped;
     }
 }
 
 fn nfa_par_close(src: &str) -> NFAResult {
     if src == ")" {
-        return NFAResult::Accepted
+        return NFAResult::Accepted;
     } else {
-        return NFAResult::Trapped
+        return NFAResult::Trapped;
+    }
+}
+
+fn nfa_id(src: &str) -> NFAResult {
+    let mut state = 0;
+    let accepted = [1];
+    for c in src.chars() {
+        if state == 0 && c.is_alphabetic() {
+            state = 1;
+        } else if state == 1 && c.is_alphanumeric() {
+            state = 1;
+        } else {
+            state = -1;
+            break;
+        }
+    }
+
+    if state == -1 {
+        return NFAResult::Trapped;
+    }
+
+    if accepted.contains(&state) {
+        return NFAResult::Accepted;
+    } else {
+        return NFAResult::NotAccepted;
+    }
+}
+
+//TODO whatabout defyining accepted and the thing inside the match
+//as the only param to to this shit?
+fn nfa_num(src: &str) -> NFAResult {
+    let mut state = 0;
+    let accepted = [1, 3];
+    for c in src.chars() {
+        match state {
+            0 if c.is_digit(10) => state = 1,
+            1 if c.is_digit(10) => state = 1,
+            1 if c == ',' => state = 2,
+            2 if c.is_digit(10) => state = 3,
+            _ => state = -1,
+        }
+        //if state == 0 && c.is_digit(10) {
+        //state = 1;
+        //} else if state == 1 && c.is_digit(10) {
+        //state = 1;
+        //} else if state == 1 && c == ',' {
+        //state = 2;
+        //} else if state == 2 && c.is_digit(10) {
+        //state = 3;
+        //} else {
+        //state = -1;
+        //break
+        //}
+    }
+
+    if state == -1 {
+        return NFAResult::Trapped;
+    }
+
+    if accepted.contains(&state) {
+        return NFAResult::Accepted;
+    } else {
+        return NFAResult::NotAccepted;
     }
 }
 
@@ -38,10 +101,11 @@ struct Token {
 }
 
 fn lex(src: &str) -> Vec<Token> {
-
     let TOKEN_CONFIG: Vec<(TokenKind, fn(&str) -> NFAResult)> = vec![
         (TokenKind::ParOpen, nfa_par_open),
         (TokenKind::ParClose, nfa_par_close),
+        (TokenKind::Id, nfa_id),
+        (TokenKind::Num, nfa_num),
     ];
 
     let mut tokens: Vec<Token> = vec![];
@@ -54,56 +118,63 @@ fn lex(src: &str) -> Vec<Token> {
         let c = chars[index];
         if c.is_whitespace() {
             index += 1;
-            continue
+            continue;
         }
-
 
         let start = index;
         let mut all_trapped = false;
         let mut candidates = vec![];
         let mut next_candidates = vec![];
+        let mut lexeme = String::new();
+        let mut next_lexeme = String::new();
         while !all_trapped {
-            println!("FUCK SHIT FUCK {}", index);
             all_trapped = true;
             candidates = next_candidates;
             next_candidates = vec![];
+            lexeme = next_lexeme;
+            next_lexeme = String::from_iter(&chars[start..index + 1]);
 
-            let lexeme = String::from_iter(&chars[start..index + 1]);
-            println!("lexeme {}", lexeme);
+            //println!("lexeme {}", lexeme);
+            //println!("next_lexeme {}", next_lexeme);
+
             for (token_kind, nfa) in &TOKEN_CONFIG {
-
-                let res = nfa(&lexeme);
+                let res = nfa(&next_lexeme);
                 match res {
-                    // TODO or?
                     NFAResult::Accepted => {
                         all_trapped = false;
                         next_candidates.push(token_kind)
-                    },
-                    NFAResult::NotAccepted => { all_trapped = false; },
-                    NFAResult::Trapped => { }
+                    }
+                    NFAResult::NotAccepted => {
+                        all_trapped = false;
+                    }
+                    NFAResult::Trapped => {}
                 }
             }
 
             index += 1;
         }
 
-        index -= 2;
-        println!("out {}", index);
+        index -= 1;
 
-        assert!(candidates.len() > 0, "asdjhasd");
-        let lexeme = String::from_iter(&chars[start..index + 1]);
+        assert!(
+            candidates.len() > 0,
+            "Unknown Token {:?} at {} {}",
+            lexeme,
+            index,
+            c
+        );
         let token_kind = candidates[0].clone();
-        let token = Token { kind: token_kind, lexeme: lexeme.to_string()};
-        println!("token {:?}", token);
+        let token = Token {
+            kind: token_kind,
+            lexeme: lexeme.to_string(),
+        };
         tokens.push(token);
-
-        index += 1;
     }
 
-    return tokens
+    return tokens;
 }
 
-
+//TODO how to convert nums?
 fn main() {
-    println!("{:?}", lex("(()"));
+    println!("{:?}", lex("(() abc123 123"));
 }
