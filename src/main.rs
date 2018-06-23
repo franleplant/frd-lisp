@@ -27,13 +27,10 @@ fn nfa_id(src: &str) -> NFAResult {
     let mut state = 0;
     let accepted = [1];
     for c in src.chars() {
-        if state == 0 && c.is_alphabetic() {
-            state = 1;
-        } else if state == 1 && c.is_alphanumeric() {
-            state = 1;
-        } else {
-            state = -1;
-            break;
+        match state {
+            0 if c.is_alphabetic() => state = 1,
+            1 if c.is_alphanumeric() => state = 1,
+            _ => state = -1,
         }
     }
 
@@ -86,12 +83,40 @@ fn nfa_num(src: &str) -> NFAResult {
     }
 }
 
+fn nfa_primitive_op(src: &str) -> NFAResult {
+    let mut state = 0;
+    let accepted = [1];
+    for c in src.chars() {
+        match state {
+            0 => {
+                if c == '+' || c == '-' || c == '*' || c == '/' {
+                    state = 1;
+                } else {
+                    state = -1;
+                }
+            },
+            _ => state = -1,
+        }
+    }
+
+    if state == -1 {
+        return NFAResult::Trapped;
+    }
+
+    if accepted.contains(&state) {
+        return NFAResult::Accepted;
+    } else {
+        return NFAResult::NotAccepted;
+    }
+}
+
 #[derive(Debug, Clone)]
 enum TokenKind {
     ParOpen,
     ParClose,
     Id,
     Num,
+    PrimitiveOp,
 }
 
 #[derive(Debug)]
@@ -106,6 +131,7 @@ fn lex(src: &str) -> Vec<Token> {
         (TokenKind::ParClose, nfa_par_close),
         (TokenKind::Id, nfa_id),
         (TokenKind::Num, nfa_num),
+        (TokenKind::PrimitiveOp, nfa_primitive_op),
     ];
 
     let mut tokens: Vec<Token> = vec![];
@@ -158,7 +184,7 @@ fn lex(src: &str) -> Vec<Token> {
 
         assert!(
             candidates.len() > 0,
-            "Unknown Token {:?} at {} {}",
+            "Unknown Token {:?} at {} {:?}",
             lexeme,
             index,
             c
@@ -174,7 +200,9 @@ fn lex(src: &str) -> Vec<Token> {
     return tokens;
 }
 
-//TODO how to convert nums?
+//TODO how to cast nums?
 fn main() {
-    println!("{:?}", lex("(() abc123 123"));
+    for token in lex("(() abc123 123 +") {
+        println!("{:?}",token );
+    }
 }
