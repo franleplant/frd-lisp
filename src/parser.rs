@@ -1,88 +1,145 @@
 use lexer::*;
 
-#[derive(Debug)]
-pub enum Expression {
-    List(List),
-    Atom(Atom),
+use std::collections::HashMap;
+
+pub type Prods = HashMap<&'static str, Vec<Vec<&'static str>>>;
+
+lazy_static! {
+    static ref PRODS: Prods = {
+        let mut map = HashMap::new();
+
+
+    map.insert(
+            "Program",
+            vec![
+                vec!["Expression"],
+                vec!["Expression", "Program"],
+            ]
+    );
+
+    map.insert(
+            "Expression",
+            vec![
+                vec!["(", ")"],
+                vec!["(", "List", ")"],
+                vec!["Atom"],
+            ]
+    );
+
+    map.insert(
+            "List",
+            vec![
+                vec!["Expression"],
+                vec!["Expression", "List"],
+            ]
+    );
+
+    map.insert(
+            "Atom",
+            vec![
+                vec!["number"],
+                vec!["symbol"],
+            ]
+    );
+
+    return map
+    };
+
+
 }
 
-// E -> ( L ) | A
-impl Expression {
-    fn new(tokens: &mut Vec<Token>) -> Expression {
-        if tokens.len() == 0 {
-            return Expression::List(List(vec![]));
+#[derive(Debug)]
+pub struct Tree {
+    ntype: String,
+    children: Children
+
+}
+
+pub type Children = Vec<Child>;
+
+#[derive(Debug)]
+pub enum Child {
+    Leaf(String),
+    Tree(Tree)
+}
+
+
+#[derive(Debug)]
+pub struct Parser {
+    tokens: Vec<Token>,
+    index: usize,
+    //prods: Prods,
+}
+
+impl Parser {
+    pub fn new() -> Parser {
+        return Parser {
+            tokens: vec![],
+            index: 0,
         }
-
-        if tokens.last().unwrap().is_kind(TokenKind::ParOpen) {
-            tokens.pop().unwrap();
-
-            let list = List::new(tokens);
-
-            tokens.pop().unwrap();
-            return Expression::List(list);
-        }
-
-        if tokens.last().unwrap().is_kind(TokenKind::ParClose) {
-            panic!("Syntax Error: unexpected ')'")
-        }
-
-        return Expression::Atom(Atom::new(tokens));
     }
-}
 
-#[derive(Debug)]
-pub struct List(Vec<Expression>);
-// L -> E*
-impl List {
-    fn new(mut tokens: &mut Vec<Token>) -> List {
-        let mut list = vec![];
-        while !tokens
-            .last()
-            .expect(&format!(
-                "Syntax Error: unexpected end of input: {:?}, after {:?}",
-                tokens.last().unwrap(),
-                list.last(),
-            ))
-            .is_kind(TokenKind::ParClose)
-        {
-            list.push(Expression::new(&mut tokens))
-        }
+    pub fn parse(&mut self, input: &str) -> Result<Tree, String> {
+        self.tokens = lex(input);
+        self.index = 0;
 
-        return List(list);
+        return self.process_non_terminal(&"Program".to_string());
+
     }
-}
 
-#[derive(Debug)]
-pub enum Atom {
-    Symbol(String),
-    Number(f64),
-}
+    //TODO better name
+    fn process_non_terminal(&mut self, non_terminal: &str) -> Result<Tree, String> {
+        let prods = PRODS.get(non_terminal).unwrap();
 
-// A -> number | symbol
-impl Atom {
-    fn new(tokens: &mut Vec<Token>) -> Atom {
-        match tokens.last().unwrap().kind {
-            TokenKind::Num => {
-                let token = tokens.pop().unwrap();
-                let num = token.lexeme.parse::<f64>().unwrap();
-                return Atom::Number(num);
+        let backtrack_pivot = self.index;
+        for right_side in prods{
+            self.index = backtrack_pivot;
+            match self.process_production(right_side) {
+                Err(_) => {},
+                Ok(children) => {
+                    return Ok(Tree{
+                        ntype: non_terminal.to_string(),
+                        children: children,
+                    })
+                }
             }
-
-            TokenKind::Id | TokenKind::PrimitiveOp => {
-                let token = tokens.pop().unwrap();
-                return Atom::Symbol(token.lexeme.clone());
-            }
-
-            _ => panic!("Syntax Error in ATOM"),
         }
+        return Err("dont know".to_string())
+    }
+
+    fn process_production(&mut self, right_side: &Vec<&str>) -> Result<Children, String> {
+        let mut children: Children = vec![];
+
+        for &symbol in right_side {
+            if self.is_terminal(symbol) {
+                if symbol == self.tokens[self.index].kind {
+                    children.push(Child::Leaf(symbol.to_string()));
+                    self.index += 1;
+                } else {
+                    return Err("Unexpected Token".to_string())
+                }
+            } else {
+                let sub_tree = self.process_non_terminal(symbol)?;
+                children.push(Child::Tree(sub_tree))
+            }
+        }
+
+        return Ok(children)
+    }
+
+
+    fn is_non_terminal(&self, symbol: &str) -> bool {
+        match PRODS.get(symbol) {
+            Some(_) => return true,
+            _ => return false
+        }
+    }
+
+    fn is_terminal(&self, symbol: &str) -> bool {
+        return self.is_non_terminal(symbol)
     }
 }
 
-
-pub fn parse(src: &str) -> Expression {
-    let mut tokens = lex(src).into_iter().rev().collect();
-    return Expression::new(&mut tokens);
-}
 
 #[cfg(test)]
 mod tests {
@@ -98,7 +155,7 @@ mod tests {
             ];
 
         for (program, expected) in cases {
-            let ast = parse(program);
+            let ast = Parser::new().parse(program);
             let ast_string = format!("{:?}", ast);
             assert_eq!(ast_string, expected, "program {:?}", program)
         }
@@ -107,7 +164,7 @@ mod tests {
     #[test]
     fn integration_case_1() {
         let program = "(begin (define r 10) (* pi (* r r)))";
-        let ast = parse(program);
+        let ast = Parser::new().parse(program);
 
         let ast_string = format!("{:?}", ast);
         let expected_ast_string = r#"List([Atom(Symbol("begin")), List([Atom(Symbol("define")), Atom(Symbol("r")), Atom(Number(10.0))]), List([Atom(Symbol("*")), Atom(Symbol("pi")), List([Atom(Symbol("*")), Atom(Symbol("r")), Atom(Symbol("r"))])])])"#;

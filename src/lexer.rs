@@ -7,14 +7,8 @@ pub enum NFAResult {
     Trapped,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum TokenKind {
-    ParOpen,
-    ParClose,
-    Id,
-    Num,
-    PrimitiveOp,
-}
+
+type TokenKind = String;
 
 #[derive(Debug)]
 pub struct Token {
@@ -30,11 +24,11 @@ impl Token {
 
 lazy_static! {
     static ref TOKEN_CONFIG: Vec<(TokenKind, fn(&str) -> NFAResult)> = vec![
-        (TokenKind::ParOpen, nfa_par_open),
-        (TokenKind::ParClose, nfa_par_close),
-        (TokenKind::Id, nfa_id),
-        (TokenKind::Num, nfa_num),
-        (TokenKind::PrimitiveOp, nfa_primitive_op),
+        ("ParOpen".to_string(), nfa_par_open),
+        ("ParClose".to_string(), nfa_par_close),
+        ("Id".to_string(), nfa_id),
+        ("Num".to_string(), nfa_num),
+        ("PrimitiveOp".to_string(), nfa_primitive_op),
     ];
 }
 
