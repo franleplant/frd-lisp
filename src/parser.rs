@@ -20,7 +20,7 @@ lazy_static! {
 
         map.insert("List", vec![vec!["Expression"], vec!["Expression", "List"]]);
 
-        map.insert("Atom", vec![vec!["number"], vec!["symbol"]]);
+        map.insert("Atom", vec![vec!["Id"], vec!["Num"], vec!["PrimitiveOp"]]);
 
         return map;
     };
@@ -59,18 +59,23 @@ impl Parser {
         self.tokens = lex(input);
         self.index = 0;
 
+        println!("PARSE {:?}", self.tokens);
+
         return self.process_non_terminal(&"Program".to_string());
     }
 
-    //TODO better name
     fn process_non_terminal(&mut self, non_terminal: &str) -> Result<Tree, String> {
         let prods = PRODS.get(non_terminal).unwrap();
-
         let backtrack_pivot = self.index;
+
+
         for right_side in prods {
+            println!("Prod attempt: {:?} -> {:?}", non_terminal, right_side);
             self.index = backtrack_pivot;
             match self.process_production(right_side) {
-                Err(_) => {}
+                Err(_) => {
+                    println!("Prod attempt: {:?} -> {:?} FAILED", non_terminal, right_side);
+                }
                 Ok(children) => {
                     return Ok(Tree {
                         ntype: non_terminal.to_string(),
@@ -79,6 +84,7 @@ impl Parser {
                 }
             }
         }
+        println!("backtrack pivot out {:?}", backtrack_pivot);
         return Err("dont know".to_string());
     }
 
@@ -86,7 +92,9 @@ impl Parser {
         let mut children: Children = vec![];
 
         for &symbol in right_side {
+            println!("current token {:?}", self.tokens[self.index].kind);
             if self.is_terminal(symbol) {
+                println!("terminal {:?}", symbol);
                 if symbol == self.tokens[self.index].kind {
                     children.push(Child::Leaf(symbol.to_string()));
                     self.index += 1;
@@ -94,6 +102,7 @@ impl Parser {
                     return Err("Unexpected Token".to_string());
                 }
             } else {
+                println!("non terminal {:?}", symbol);
                 let sub_tree = self.process_non_terminal(symbol)?;
                 children.push(Child::Tree(sub_tree))
             }
@@ -110,7 +119,7 @@ impl Parser {
     }
 
     fn is_terminal(&self, symbol: &str) -> bool {
-        return self.is_non_terminal(symbol);
+        return !self.is_non_terminal(symbol);
     }
 }
 

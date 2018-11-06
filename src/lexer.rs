@@ -23,8 +23,8 @@ impl Token {
 
 lazy_static! {
     static ref TOKEN_CONFIG: Vec<(TokenKind, fn(&str) -> NFAResult)> = vec![
-        ("ParOpen".to_string(), nfa_par_open),
-        ("ParClose".to_string(), nfa_par_close),
+        ("(".to_string(), nfa_par_open),
+        (")".to_string(), nfa_par_close),
         ("Id".to_string(), nfa_id),
         ("Num".to_string(), nfa_num),
         ("PrimitiveOp".to_string(), nfa_primitive_op),
@@ -209,7 +209,7 @@ mod tests {
     fn test_it() {
         let tokens = lex("(() abc123 123 +");
         let tokens_string = format!("{:?}", tokens);
-        let expected = r#"[Token { kind: ParOpen, lexeme: "(" }, Token { kind: ParOpen, lexeme: "(" }, Token { kind: ParClose, lexeme: ")" }, Token { kind: Id, lexeme: "abc123" }, Token { kind: Num, lexeme: "123" }, Token { kind: PrimitiveOp, lexeme: "+" }]"#;
+        let expected = r#"[Token { kind: (, lexeme: "(" }, Token { kind: (, lexeme: "(" }, Token { kind: ), lexeme: ")" }, Token { kind: Id, lexeme: "abc123" }, Token { kind: Num, lexeme: "123" }, Token { kind: PrimitiveOp, lexeme: "+" }]"#;
         assert_eq!(tokens_string, expected);
     }
 }
