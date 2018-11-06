@@ -7,7 +7,6 @@ pub enum NFAResult {
     Trapped,
 }
 
-
 type TokenKind = String;
 
 #[derive(Debug)]

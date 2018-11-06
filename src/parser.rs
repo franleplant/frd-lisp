@@ -8,51 +8,28 @@ lazy_static! {
     static ref PRODS: Prods = {
         let mut map = HashMap::new();
 
-
-    map.insert(
+        map.insert(
             "Program",
-            vec![
-                vec!["Expression"],
-                vec!["Expression", "Program"],
-            ]
-    );
+            vec![vec!["Expression"], vec!["Expression", "Program"]],
+        );
 
-    map.insert(
+        map.insert(
             "Expression",
-            vec![
-                vec!["(", ")"],
-                vec!["(", "List", ")"],
-                vec!["Atom"],
-            ]
-    );
+            vec![vec!["(", ")"], vec!["(", "List", ")"], vec!["Atom"]],
+        );
 
-    map.insert(
-            "List",
-            vec![
-                vec!["Expression"],
-                vec!["Expression", "List"],
-            ]
-    );
+        map.insert("List", vec![vec!["Expression"], vec!["Expression", "List"]]);
 
-    map.insert(
-            "Atom",
-            vec![
-                vec!["number"],
-                vec!["symbol"],
-            ]
-    );
+        map.insert("Atom", vec![vec!["number"], vec!["symbol"]]);
 
-    return map
+        return map;
     };
-
-
 }
 
 #[derive(Debug)]
 pub struct Tree {
     ntype: String,
-    children: Children
-
+    children: Children,
 }
 
 pub type Children = Vec<Child>;
@@ -60,9 +37,8 @@ pub type Children = Vec<Child>;
 #[derive(Debug)]
 pub enum Child {
     Leaf(String),
-    Tree(Tree)
+    Tree(Tree),
 }
-
 
 #[derive(Debug)]
 pub struct Parser {
@@ -76,7 +52,7 @@ impl Parser {
         return Parser {
             tokens: vec![],
             index: 0,
-        }
+        };
     }
 
     pub fn parse(&mut self, input: &str) -> Result<Tree, String> {
@@ -84,7 +60,6 @@ impl Parser {
         self.index = 0;
 
         return self.process_non_terminal(&"Program".to_string());
-
     }
 
     //TODO better name
@@ -92,19 +67,19 @@ impl Parser {
         let prods = PRODS.get(non_terminal).unwrap();
 
         let backtrack_pivot = self.index;
-        for right_side in prods{
+        for right_side in prods {
             self.index = backtrack_pivot;
             match self.process_production(right_side) {
-                Err(_) => {},
+                Err(_) => {}
                 Ok(children) => {
-                    return Ok(Tree{
+                    return Ok(Tree {
                         ntype: non_terminal.to_string(),
                         children: children,
                     })
                 }
             }
         }
-        return Err("dont know".to_string())
+        return Err("dont know".to_string());
     }
 
     fn process_production(&mut self, right_side: &Vec<&str>) -> Result<Children, String> {
@@ -116,7 +91,7 @@ impl Parser {
                     children.push(Child::Leaf(symbol.to_string()));
                     self.index += 1;
                 } else {
-                    return Err("Unexpected Token".to_string())
+                    return Err("Unexpected Token".to_string());
                 }
             } else {
                 let sub_tree = self.process_non_terminal(symbol)?;
@@ -124,22 +99,20 @@ impl Parser {
             }
         }
 
-        return Ok(children)
+        return Ok(children);
     }
-
 
     fn is_non_terminal(&self, symbol: &str) -> bool {
         match PRODS.get(symbol) {
             Some(_) => return true,
-            _ => return false
+            _ => return false,
         }
     }
 
     fn is_terminal(&self, symbol: &str) -> bool {
-        return self.is_non_terminal(symbol)
+        return self.is_non_terminal(symbol);
     }
 }
-
 
 #[cfg(test)]
 mod tests {
