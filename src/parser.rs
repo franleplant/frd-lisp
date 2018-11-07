@@ -76,6 +76,10 @@ impl Parser {
         return backtrack_id;
     }
 
+    pub fn get_token(&self) -> &Token {
+        return &self.tokens[self.index];
+    }
+
     pub fn parse(&mut self, input: &str) -> Result<Node, String> {
         self.tokens = lex(input);
         self.index = 0;
@@ -111,6 +115,9 @@ impl Parser {
                     let mut sub_tree = Node::new_tree(non_terminal.to_string(), children);
 
                     // TODO abstract this into soemthing configurable such as PRODs
+                    // TODO do the same for Expression Program
+                    // TODO maybe convert number strings into numbers? and any other data
+                    // conversions?
                     if non_terminal == "List" && *right_side == vec!["Expression", "List"] {
                         sub_tree = flatten_list(sub_tree);
                     }
@@ -132,11 +139,11 @@ impl Parser {
         debug!("+++ process the production {:?}", right_side);
         for &symbol in right_side {
             debug!("$$$ symbol {:?}", symbol);
-            debug!("current token {:?}", self.tokens[self.index]);
+            debug!("current token {:?}", self.get_token());
             if self.is_terminal(symbol) {
                 debug!("terminal {:?}", symbol);
-                if symbol == self.tokens[self.index].kind {
-                    children.push(Node::new_leaf(self.tokens[self.index].lexeme.to_string()));
+                if symbol == self.get_token().kind {
+                    children.push(Node::new_leaf(self.get_token().lexeme.to_string()));
                     self.index += 1;
                     debug!("NEXT SYMBOL");
                 } else {
@@ -146,7 +153,7 @@ impl Parser {
             } else {
                 debug!("non terminal {:?}", symbol);
                 let sub_tree = self.process_non_terminal(symbol)?;
-                children.push(sub_tree)
+                children.push(sub_tree);
             }
         }
 
