@@ -5,7 +5,9 @@ extern crate lazy_static;
 extern crate log;
 extern crate env_logger;
 
+mod grammar;
 mod lexer;
+mod parse_node;
 mod parser;
 
 fn main() {

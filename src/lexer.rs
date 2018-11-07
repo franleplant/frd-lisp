@@ -15,19 +15,15 @@ pub struct Token {
     pub lexeme: String,
 }
 
-impl Token {
-    //pub fn is_kind(&self, kind: TokenKind) -> bool {
-    //return self.kind == kind;
-    //}
-}
+impl Token {}
 
 lazy_static! {
-    static ref TOKEN_CONFIG: Vec<(TokenKind, fn(&str) -> NFAResult)> = vec![
-        ("(".to_string(), nfa_par_open),
-        (")".to_string(), nfa_par_close),
-        ("Id".to_string(), nfa_id),
-        ("Num".to_string(), nfa_num),
-        ("PrimitiveOp".to_string(), nfa_primitive_op),
+    static ref TOKEN_CONFIG: Vec<(&'static str, fn(&str) -> NFAResult)> = vec![
+        ("(", nfa_par_open),
+        (")", nfa_par_close),
+        ("Id", nfa_id),
+        ("Num", nfa_num),
+        ("PrimitiveOp", nfa_primitive_op),
     ];
 }
 
@@ -89,7 +85,7 @@ pub fn lex(src: &str) -> Vec<Token> {
         );
         let token_kind = candidates[0].clone();
         let token = Token {
-            kind: token_kind,
+            kind: token_kind.to_string(),
             lexeme: lexeme.to_string(),
         };
         tokens.push(token);

@@ -1,64 +1,12 @@
-use lexer::*;
-
-use std::collections::HashMap;
-
-pub type Prods = HashMap<&'static str, Vec<Vec<&'static str>>>;
-
-lazy_static! {
-    static ref PRODS: Prods = {
-        let mut map = HashMap::new();
-
-        map.insert(
-            "Program",
-            vec![vec!["Expression"], vec!["Expression", "Program"]],
-        );
-
-        map.insert(
-            "Expression",
-            vec![vec!["(", ")"], vec!["(", "List", ")"], vec!["Atom"]],
-        );
-
-        map.insert("List", vec![vec!["Expression", "List"], vec!["Expression"]]);
-
-        map.insert("Atom", vec![vec!["Id"], vec!["Num"], vec!["PrimitiveOp"]]);
-
-        return map;
-    };
-}
-
-#[derive(Debug, Clone)]
-pub struct Node {
-    ntype: String,
-    lexeme: String,
-    children: Children,
-}
-
-pub type Children = Vec<Node>;
-
-impl Node {
-    pub fn new_tree(ntype: String, children: Children) -> Node {
-        return Node {
-            ntype,
-            children,
-            lexeme: String::new(),
-        };
-    }
-
-    pub fn new_leaf(lexeme: String) -> Node {
-        return Node {
-            ntype: "Leaf".to_string(),
-            children: vec![],
-            lexeme,
-        };
-    }
-}
+use grammar::{new_leaf_symbol, postprocess_tree, PRODS};
+use lexer::{lex, Token};
+use parse_node::{Children, Node};
 
 #[derive(Debug)]
 pub struct Parser {
     tokens: Vec<Token>,
     index: usize,
     backtrack_id: usize,
-    //prods: Prods,
 }
 
 impl Parser {
@@ -80,6 +28,17 @@ impl Parser {
         return &self.tokens[self.index];
     }
 
+    fn is_non_terminal(&self, symbol: &str) -> bool {
+        match PRODS.get(symbol) {
+            Some(_) => return true,
+            _ => return false,
+        }
+    }
+
+    fn is_terminal(&self, symbol: &str) -> bool {
+        return !self.is_non_terminal(symbol);
+    }
+
     pub fn parse(&mut self, input: &str) -> Result<Node, String> {
         self.tokens = lex(input);
         self.index = 0;
@@ -99,6 +58,7 @@ impl Parser {
                 ">>> {} Prod attempt: {:?} -> {:?}",
                 backtrack_id, non_terminal, right_side
             );
+
             self.index = backtrack_pivot;
             match self.process_production(right_side) {
                 Err(_) => {
@@ -112,15 +72,8 @@ impl Parser {
                         "<<< {} Prod attempt: {:?} -> {:?} SUCCEEDED",
                         backtrack_id, non_terminal, right_side
                     );
-                    let mut sub_tree = Node::new_tree(non_terminal.to_string(), children);
-
-                    // TODO abstract this into soemthing configurable such as PRODs
-                    // TODO do the same for Expression Program
-                    // TODO maybe convert number strings into numbers? and any other data
-                    // conversions?
-                    if non_terminal == "List" && *right_side == vec!["Expression", "List"] {
-                        sub_tree = flatten_list(sub_tree);
-                    }
+                    let sub_tree = Node::new_tree(non_terminal.to_string(), children);
+                    let sub_tree = postprocess_tree(sub_tree, (non_terminal, right_side));
 
                     return Ok(sub_tree);
                 }
@@ -135,15 +88,18 @@ impl Parser {
 
     fn process_production(&mut self, right_side: &Vec<&str>) -> Result<Children, String> {
         let mut children: Children = vec![];
-
         debug!("+++ process the production {:?}", right_side);
+
         for &symbol in right_side {
             debug!("$$$ symbol {:?}", symbol);
             debug!("current token {:?}", self.get_token());
+
             if self.is_terminal(symbol) {
                 debug!("terminal {:?}", symbol);
                 if symbol == self.get_token().kind {
-                    children.push(Node::new_leaf(self.get_token().lexeme.to_string()));
+                    let leaf = new_leaf_symbol(self.get_token());
+                    children.push(leaf);
+
                     self.index += 1;
                     debug!("NEXT SYMBOL");
                 } else {
@@ -160,34 +116,6 @@ impl Parser {
         debug!("+++ OK process the production {:?}", right_side);
         return Ok(children);
     }
-
-    fn is_non_terminal(&self, symbol: &str) -> bool {
-        match PRODS.get(symbol) {
-            Some(_) => return true,
-            _ => return false,
-        }
-    }
-
-    fn is_terminal(&self, symbol: &str) -> bool {
-        return !self.is_non_terminal(symbol);
-    }
-}
-
-pub fn flatten_list(node: Node) -> Node {
-    let flat_children = node
-        .children
-        .into_iter()
-        .enumerate()
-        .flat_map(|(i, node)| {
-            if i == 1 && node.ntype == "List" {
-                return node.children;
-            }
-            return vec![node];
-        })
-        //.map(|(i, tree)| Node::Tree(tree))
-        .collect();
-
-    return Node::new_tree(node.ntype, flat_children);
 }
 
 #[cfg(test)]
