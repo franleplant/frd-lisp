@@ -17,7 +17,7 @@ pub struct Token {
 
 impl Token {
     //pub fn is_kind(&self, kind: TokenKind) -> bool {
-        //return self.kind == kind;
+    //return self.kind == kind;
     //}
 }
 

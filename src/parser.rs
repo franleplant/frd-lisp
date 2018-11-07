@@ -18,17 +18,13 @@ lazy_static! {
             vec![vec!["(", ")"], vec!["(", "List", ")"], vec!["Atom"]],
         );
 
-        map.insert("List", vec![
-                   vec!["Expression", "List"],
-                   vec!["Expression"],
-                   ]);
+        map.insert("List", vec![vec!["Expression", "List"], vec!["Expression"]]);
 
         map.insert("Atom", vec![vec!["Id"], vec!["Num"], vec!["PrimitiveOp"]]);
 
         return map;
     };
 }
-
 
 #[derive(Debug, Clone)]
 pub struct Node {
@@ -45,7 +41,7 @@ impl Node {
             ntype,
             children,
             lexeme: String::new(),
-        }
+        };
     }
 
     pub fn new_leaf(lexeme: String) -> Node {
@@ -53,13 +49,9 @@ impl Node {
             ntype: "Leaf".to_string(),
             children: vec![],
             lexeme,
-        }
+        };
     }
 }
-
-
-
-
 
 #[derive(Debug)]
 pub struct Parser {
@@ -98,27 +90,40 @@ impl Parser {
         let backtrack_pivot = self.index;
         let backtrack_id = self.get_backtrack_id();
 
-
         for right_side in prods {
-            debug!(">>> {} Prod attempt: {:?} -> {:?}", backtrack_id, non_terminal, right_side);
+            debug!(
+                ">>> {} Prod attempt: {:?} -> {:?}",
+                backtrack_id, non_terminal, right_side
+            );
             self.index = backtrack_pivot;
             match self.process_production(right_side) {
-                Err(_) => { debug!("<<< {} Prod attempt: {:?} -> {:?} FAILED", backtrack_id, non_terminal, right_side); }
+                Err(_) => {
+                    debug!(
+                        "<<< {} Prod attempt: {:?} -> {:?} FAILED",
+                        backtrack_id, non_terminal, right_side
+                    );
+                }
                 Ok(children) => {
-                    debug!("<<< {} Prod attempt: {:?} -> {:?} SUCCEEDED", backtrack_id, non_terminal, right_side);
-                    let mut sub_tree = Node::new_tree( non_terminal.to_string(), children);
+                    debug!(
+                        "<<< {} Prod attempt: {:?} -> {:?} SUCCEEDED",
+                        backtrack_id, non_terminal, right_side
+                    );
+                    let mut sub_tree = Node::new_tree(non_terminal.to_string(), children);
 
                     // TODO abstract this into soemthing configurable such as PRODs
                     if non_terminal == "List" && *right_side == vec!["Expression", "List"] {
                         sub_tree = flatten_list(sub_tree);
                     }
 
-                    return Ok(sub_tree)
+                    return Ok(sub_tree);
                 }
             }
         }
         debug!("backtrack pivot out {:?}", backtrack_pivot);
-        return Err(format!("Cannot find the right derivation in token {:?}", self.tokens[self.index]));
+        return Err(format!(
+            "Cannot find the right derivation in token {:?}",
+            self.tokens[self.index]
+        ));
     }
 
     fn process_production(&mut self, right_side: &Vec<&str>) -> Result<Children, String> {
@@ -162,22 +167,25 @@ impl Parser {
 }
 
 pub fn flatten_list(node: Node) -> Node {
-    let flat_children = node.children.into_iter().enumerate().flat_map(|(i, node)| {
-        if i == 1 && node.ntype == "List" {
-            return node.children
-        }
-        return vec![node]
-    })
-    //.map(|(i, tree)| Node::Tree(tree))
-    .collect();
+    let flat_children = node
+        .children
+        .into_iter()
+        .enumerate()
+        .flat_map(|(i, node)| {
+            if i == 1 && node.ntype == "List" {
+                return node.children;
+            }
+            return vec![node];
+        })
+        //.map(|(i, tree)| Node::Tree(tree))
+        .collect();
 
-    return Node::new_tree( node.ntype, flat_children,)
+    return Node::new_tree(node.ntype, flat_children);
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
 
     #[test]
     fn base_cases() {
