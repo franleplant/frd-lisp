@@ -5,3 +5,5 @@ authors = ["Fran Guijarro <franleplant@gmail.com>"]
 
 [dependencies]
 lazy_static = "1.0"
+log = "0.4.6"
+env_logger = "*"
