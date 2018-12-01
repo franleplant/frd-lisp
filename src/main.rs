@@ -5,8 +5,10 @@ extern crate lazy_static;
 extern crate log;
 extern crate env_logger;
 
+mod eval;
 mod grammar;
 mod lexer;
+mod op;
 mod parse_node;
 mod parser;
 

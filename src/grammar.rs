@@ -30,10 +30,15 @@ lazy_static! {
 /// to simplify the parse tree and avoid extra nodes
 pub fn postprocess_tree(tree: Node, prod: (&str, &Vec<&str>)) -> Node {
     let (non_terminal, right_side) = prod;
+    //TODO make this a match
 
     // TODO do the same for Expression Program
     if non_terminal == "List" && right_side == &vec!["Expression", "List"] {
         return flatten_list(tree);
+    }
+
+    if non_terminal == "Expression" && right_side == &vec!["(", "List", ")"] {
+        return remove_parenthesis(tree);
     }
 
     return tree;
@@ -47,12 +52,12 @@ pub fn new_leaf_symbol(token: &Token) -> Node {
 
     let leaf_symbol = match kind {
         "(" | ")" => SymbolType::Delimiter(lexeme),
-        "Id" => SymbolType::Symbol(lexeme),
+        "Id" | "PrimitiveOp" => SymbolType::Symbol(lexeme),
         "Num" => {
             let num = lexeme.parse::<f64>().expect("Badly formated number");
             SymbolType::Num(num)
         }
-        _ => panic!("Unexpected token"),
+        _ => panic!("Unexpected token {:?}", token),
     };
 
     let leaf = Node::new_leaf(leaf_symbol);
@@ -73,4 +78,13 @@ pub fn flatten_list(node: Node) -> Node {
         }).collect();
 
     return Node::new_tree(node.ntype, flat_children);
+}
+
+pub fn remove_parenthesis(mut node: Node) -> Node {
+    println!("{:#?}", node);
+
+    // TODO asserts
+    let leaf = node.children.remove(1);
+    node.children = vec![leaf];
+    return node;
 }

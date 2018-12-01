@@ -132,7 +132,7 @@ mod tests {
         //r#"Tree { ntype: "Program", children: [Tree { ntype: "Expression", children: [Leaf("("), Tree { ntype: "List", children: [Tree { ntype: "Expression", children: [Tree { ntype: "Atom", children: [Leaf("begin")] }] }] }, Leaf(")")] }] }"#
         //),
 
-                ("(begin 1 2)", r#"List([Atom(Symbol("begin")), Atom(Number(1.0)), Atom(Number(2.0))])"#),
+                ("(begin 1 2 3)", r#"List([Atom(Symbol("begin")), Atom(Number(1.0)), Atom(Number(2.0))])"#),
                 ("((closure 1 2) 1 (list 1 2))", r#"List([List([Atom(Symbol("closure")), Atom(Number(1.0)), Atom(Number(2.0))]), Atom(Number(1.0)), List([Atom(Symbol("list")), Atom(Number(1.0)), Atom(Number(2.0))])])"#),
 
             ];
