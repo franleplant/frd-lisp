@@ -17,7 +17,6 @@ pub enum LispValue {
     Func(Func),
 }
 
-
 impl LispValue {
     pub fn unwrap_number(&self) -> &i64 {
         match self {

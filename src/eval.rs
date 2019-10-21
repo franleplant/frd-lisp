@@ -79,7 +79,9 @@ pub fn eval_list(list: &[Expr], env: Rc<Env>) -> Rc<LispValue> {
     match first {
         Expr::Atom(atom) => {
             let id = atom.expect_id("Unexpected non id");
-            let func = env.get(&id).unwrap_or_else(|| panic!("Symbol `{}` not found", id));
+            let func = env
+                .get(&id)
+                .unwrap_or_else(|| panic!("Symbol `{}` not found", id));
             let arg_values: Vec<Rc<LispValue>> = list
                 .iter()
                 .map(|expr| eval_expression(expr, env.clone()))
@@ -116,7 +118,9 @@ pub fn eval_atom(atom: &Atom, env: Rc<Env>) -> Rc<LispValue> {
         Atom::Id(id) => match id.as_str() {
             "true" => Rc::new(LispValue::Bool(Bool::True)),
             "false" => Rc::new(LispValue::Bool(Bool::False)),
-            _ => env.get(&id).unwrap_or_else(|| panic!("Symbol {} not found", id)),
+            _ => env
+                .get(&id)
+                .unwrap_or_else(|| panic!("Symbol {} not found", id)),
         },
     }
 }

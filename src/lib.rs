@@ -4,7 +4,11 @@ extern crate env_logger;
 
 #[macro_use]
 extern crate lalrpop_util;
-lalrpop_mod!(pub grammar); // synthesized by LALRPOP
+// synthesized by LALRPOP
+lalrpop_mod!(
+    #[allow(clippy)]
+    grammar
+);
 
 use std::rc::Rc;
 
