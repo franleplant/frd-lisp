@@ -6,7 +6,7 @@ extern crate env_logger;
 extern crate lalrpop_util;
 // synthesized by LALRPOP
 lalrpop_mod!(
-    #[allow(clippy)]
+    #[allow(clippy::all)]
     grammar
 );
 
