@@ -2,8 +2,8 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
-use intrinsics;
-use lisp_value::LispValue;
+use crate::intrinsics;
+use crate::lisp_value::LispValue;
 
 pub type Map = HashMap<String, Rc<LispValue>>;
 

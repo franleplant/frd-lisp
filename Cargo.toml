@@ -4,8 +4,10 @@ version = "0.1.0"
 authors = ["Fran Guijarro <franleplant@gmail.com>"]
 edition = "2018"
 
-[build-dependencies]
-lalrpop = "*"
+
+[build-dependencies.lalrpop]
+version = "*"
+features = ["lexer"]
 
 [dependencies]
 lalrpop-util = "*"

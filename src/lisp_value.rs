@@ -3,9 +3,9 @@ use std::collections::HashMap;
 use std::fmt;
 use std::rc::Rc;
 
-use ast::Expr;
-use env::Env;
-use eval::eval_expression;
+use crate::ast::Expr;
+use crate::env::Env;
+use crate::eval::eval_expression;
 
 #[derive(Clone)]
 pub enum LispValue {

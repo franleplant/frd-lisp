@@ -7,13 +7,13 @@
 //TODO
 //- instead of Panic! on every error it would nice to a hace Result infra
 //
-use lisp_value::{Bool, Func, LispValue};
+use crate::lisp_value::{Bool, Func, LispValue};
 use std::rc::Rc;
 
 lalrpop_mod!(pub grammar); // synthesized by LALRPOP
 
-use ast::{Atom, Expr};
-use env::Env;
+use crate::ast::{Atom, Expr};
+use crate::env::Env;
 
 pub fn eval(source: &str) -> Vec<Rc<LispValue>> {
     debug!("eval {:?}", source);
