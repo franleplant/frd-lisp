@@ -6,7 +6,7 @@ use crate::lisp_value::{Bool, LispValue};
 pub fn add(arguments: &[Rc<LispValue>]) -> Rc<LispValue> {
     let res = arguments.iter().fold(0, |acc, x| acc + x.unwrap_number());
 
-    return Rc::new(LispValue::Int(res));
+    Rc::new(LispValue::Int(res))
 }
 
 pub fn sub(arguments: &[Rc<LispValue>]) -> Rc<LispValue> {
@@ -17,7 +17,7 @@ pub fn sub(arguments: &[Rc<LispValue>]) -> Rc<LispValue> {
         .skip(1)
         .fold(*first, |acc, x| acc - x.unwrap_number());
 
-    return Rc::new(LispValue::Int(res));
+    Rc::new(LispValue::Int(res))
 }
 
 pub fn eq(arguments: &[Rc<LispValue>]) -> Rc<LispValue> {
@@ -28,7 +28,7 @@ pub fn eq(arguments: &[Rc<LispValue>]) -> Rc<LispValue> {
         }
     }
 
-    return Rc::new(LispValue::Bool(Bool::True));
+    Rc::new(LispValue::Bool(Bool::True))
 }
 
 pub fn gt(arguments: &[Rc<LispValue>]) -> Rc<LispValue> {
@@ -39,7 +39,7 @@ pub fn gt(arguments: &[Rc<LispValue>]) -> Rc<LispValue> {
             _ => return Rc::new(LispValue::Bool(Bool::False)),
         }
     }
-    return Rc::new(LispValue::Bool(Bool::True));
+    Rc::new(LispValue::Bool(Bool::True))
 }
 
 pub fn lt(arguments: &[Rc<LispValue>]) -> Rc<LispValue> {
@@ -50,5 +50,5 @@ pub fn lt(arguments: &[Rc<LispValue>]) -> Rc<LispValue> {
             _ => return Rc::new(LispValue::Bool(Bool::False)),
         }
     }
-    return Rc::new(LispValue::Bool(Bool::True));
+    Rc::new(LispValue::Bool(Bool::True))
 }

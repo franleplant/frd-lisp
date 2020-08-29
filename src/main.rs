@@ -48,7 +48,7 @@ fn repl_eval(source: &str, env: Rc<env::Env>) -> Vec<Rc<lisp_value::LispValue>> 
 
     let result = eval::eval_program(&result.unwrap(), env);
 
-    return result;
+    result
 }
 
 #[test]

@@ -26,7 +26,7 @@ pub fn eval_file(file_name: &str) -> Vec<Rc<lisp_value::LispValue>> {
     let mut contents = String::new();
     file.read_to_string(&mut contents).unwrap();
 
-    return eval::eval(&contents);
+    eval::eval(&contents)
 }
 
 #[test]
@@ -47,7 +47,7 @@ fn main_test() {
         println!("RESULT {:?}", result);
         println!("GLOBAL ENV {:#?}", global_env);
 
-        return result;
+        result
     }
 
     let sources = vec![

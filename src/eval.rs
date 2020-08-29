@@ -27,7 +27,7 @@ pub fn eval(source: &str) -> Vec<Rc<LispValue>> {
     debug!("env {:?}", global_env);
     debug!("result {:?}", result);
 
-    return result;
+    result
 }
 
 pub fn eval_program(program: &[Expr], env: Rc<Env>) -> Vec<Rc<LispValue>> {
@@ -43,7 +43,7 @@ pub fn eval_program(program: &[Expr], env: Rc<Env>) -> Vec<Rc<LispValue>> {
     //}
 
     debug!("eval_program END");
-    return result;
+    result
 }
 
 pub fn eval_expression(expression: &Expr, env: Rc<Env>) -> Rc<LispValue> {
@@ -64,7 +64,7 @@ pub fn eval_expression(expression: &Expr, env: Rc<Env>) -> Rc<LispValue> {
     };
 
     debug!("eval_expression END {:?}", result);
-    return result;
+    result
 }
 
 pub fn eval_list(list: &[Expr], env: Rc<Env>) -> Rc<LispValue> {
@@ -91,13 +91,13 @@ pub fn eval_list(list: &[Expr], env: Rc<Env>) -> Rc<LispValue> {
                 LispValue::Intrinsic(ref func) => {
                     let res = func(&arg_values);
                     debug!("eval_list END Intrinsice {:?}", res);
-                    return res;
+                    res
                 }
 
                 LispValue::Func(ref func) => {
                     let res = func.call(arg_values);
                     debug!("eval_list END FUNC {:?}", res);
-                    return res;
+                    res
                 }
                 _ => panic!("Unexpected Value in the Function name position"),
             }
@@ -134,14 +134,14 @@ pub fn eval_define_function(
     let func = Func::new(fn_name, arg_names, body, env.clone());
     env.set(func.get_name().clone(), Rc::new(LispValue::Func(func)));
 
-    return Rc::new(LispValue::Nill);
+    Rc::new(LispValue::Nill)
 }
 
 pub fn eval_define_variable(var_name: &str, var_value: &Expr, env: Rc<Env>) -> Rc<LispValue> {
     let value = eval_expression(var_value, env.clone());
     env.set(var_name.to_string(), value);
 
-    return Rc::new(LispValue::Nill);
+    Rc::new(LispValue::Nill)
 }
 
 pub fn eval_if(
@@ -154,14 +154,14 @@ pub fn eval_if(
     if let LispValue::Bool(ref value) = *cond_value {
         match value {
             Bool::True => {
-                return eval_expression(positive, env.clone());
+                eval_expression(positive, env)
             }
             Bool::False => {
                 if negative.is_none() {
                     return Rc::new(LispValue::Nill);
                 }
 
-                return eval_expression(negative.as_ref().unwrap(), env.clone());
+                eval_expression(negative.as_ref().unwrap(), env)
             }
         }
     } else {

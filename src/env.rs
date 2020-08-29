@@ -62,9 +62,7 @@ impl Env {
             }
         }
 
-        if self.parent.is_none() {
-            return None;
-        }
+        self.parent.as_ref()?;
 
         self.parent.as_ref().unwrap().get(key)
     }
