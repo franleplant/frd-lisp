@@ -2,12 +2,13 @@
 name = "frd_lisp"
 version = "0.1.0"
 authors = ["Fran Guijarro <franleplant@gmail.com>"]
+edition = "2018"
 
 [build-dependencies]
-lalrpop = "0.17.2"
+lalrpop = "*"
 
 [dependencies]
-lalrpop-util = "0.17.2"
-regex = "0.2.1"
-log = "0.4.6"
+lalrpop-util = "*"
+regex = "*"
+log = "*"
 env_logger = "*"
