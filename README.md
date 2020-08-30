@@ -6,9 +6,6 @@ Lisp written in Rust as part of of fun learning exercise!
 
 Install
 - [Rust (latest stable), via Rustup is recommended](https://www.rust-lang.org/tools/install)
-- [rust fmt](https://github.com/rust-lang/rustfmt)
-- [rust clippy](https://github.com/rust-lang/rust-clippy)
-- git
 
 
 Clone
@@ -20,12 +17,10 @@ Run
 or
 - `cargo test`
 
-## Code quality
 
-- PRs MUST have passing builds to be merged
-- be sure to auto format your code with `cargo fmt`
-- add tests for new features
-- be sure to use `cargo clippy` to detect common problems in your code (we cannot include this in the CI process because of an outstanding issue between clippy and lalrpop https://github.com/lalrpop/lalrpop/pull/384)
+## Dev notes
+
+- autofix clippy errors: `rustup run nightly cargo clippy --fix -Z unstable-options`
 
 
 # Mission, Vision, Values
