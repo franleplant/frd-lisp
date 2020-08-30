@@ -8,12 +8,12 @@
 //- instead of Panic! on every error it would nice to a hace Result infra
 //
 use crate::lisp_value::{Bool, Func, LispValue};
+use log::debug;
 use std::rc::Rc;
-
-lalrpop_mod!(pub grammar); // synthesized by LALRPOP
 
 use crate::ast::{Atom, Expr};
 use crate::env::Env;
+use crate::grammar;
 
 pub fn eval(source: &str) -> Vec<Rc<LispValue>> {
     debug!("eval {:?}", source);

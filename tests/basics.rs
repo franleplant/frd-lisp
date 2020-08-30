@@ -1,9 +1,4 @@
-#[macro_use]
-extern crate log;
-extern crate env_logger;
-
-extern crate frd_lisp;
-
+use env_logger;
 use frd_lisp::eval_file;
 
 #[test]

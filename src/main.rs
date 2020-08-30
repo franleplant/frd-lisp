@@ -1,13 +1,10 @@
-#[macro_use]
-extern crate log;
-extern crate env_logger;
+use lalrpop_util::lalrpop_mod;
 
-#[macro_use]
-extern crate lalrpop_util;
 // synthesized by LALRPOP
 lalrpop_mod!(
     #[allow(clippy::all)]
-    grammar
+    #[allow(unused)]
+    pub grammar
 );
 
 use std::rc::Rc;
