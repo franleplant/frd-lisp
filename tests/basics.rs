@@ -1,4 +1,4 @@
-use env_logger;
+
 use frd_lisp::eval_file;
 
 #[test]
