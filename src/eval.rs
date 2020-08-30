@@ -153,9 +153,7 @@ pub fn eval_if(
     let cond_value = eval_expression(cond, env.clone());
     if let LispValue::Bool(ref value) = *cond_value {
         match value {
-            Bool::True => {
-                eval_expression(positive, env)
-            }
+            Bool::True => eval_expression(positive, env),
             Bool::False => {
                 if negative.is_none() {
                     return Rc::new(LispValue::Nill);
