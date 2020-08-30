@@ -53,12 +53,12 @@ impl Env {
         }
     }
 
-    pub fn get(&self, key: &String) -> Option<Rc<LispValue>> {
+    pub fn get(&self, key: &str) -> Option<Rc<LispValue>> {
         {
             let env = self.env.borrow();
             let value = env.get(key);
-            if value.is_some() {
-                return Some(value.unwrap().clone());
+            if let Some(inner_value) = value {
+                return Some(inner_value.clone());
             }
         }
 
