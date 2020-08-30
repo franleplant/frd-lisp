@@ -1,7 +1,6 @@
-# frd-lisp [![Build Status](https://travis-ci.org/franleplant/frd-lisp.svg?branch=master)](https://travis-ci.org/franleplant/frd-lisp)
+# frd-lisp ![Rust](https://github.com/franleplant/frd-lisp/workflows/Rust/badge.svg)
 
-Lisp written in Rust as part of a research project in UTN-FRD (Universidad Tecnologica Nacional - Facultad Regional Delta)
-
+Lisp written in Rust as part of of fun learning exercise!
 
 ## Running the code
 
