@@ -43,7 +43,7 @@ fn repl_eval(source: &str, env: Rc<env::Env>) -> Vec<Rc<lisp_value::LispValue>> 
     let result = parser.parse(source);
     assert!(result.is_ok(), "Syntax error {:?}", result);
 
-     eval::eval_program(&result.unwrap(), env)
+    eval::eval_program(&result.unwrap(), env)
 }
 
 #[test]
