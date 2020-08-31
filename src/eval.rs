@@ -33,7 +33,10 @@ pub fn eval(source: &str) -> Vec<Result<Rc<LispValue>, String>> {
 pub fn eval_program(program: &[Expr], env: Rc<Env>) -> Vec<Result<Rc<LispValue>, String>> {
     debug!("eval {:?}", program);
 
-    let result: Vec<Result<Rc<LispValue>, String>> = program .iter() .map(|expr| eval_expression(expr, env.clone())).collect();
+    let result: Vec<Result<Rc<LispValue>, String>> = program
+        .iter()
+        .map(|expr| eval_expression(expr, env.clone()))
+        .collect();
 
     debug!("eval_program END");
     result
@@ -74,21 +77,17 @@ pub fn eval_list(list: &[Expr], env: Rc<Env>) -> Result<Rc<LispValue>, String> {
             //TODO
 
             let id = if let Atom::Id(id) = atom {
-                  id
-                } else {
-                    return Err(format!("unexpected non id {:?}", atom))
+                id
+            } else {
+                return Err(format!("unexpected non id {:?}", atom));
             };
 
-            let func = env
-                .get(&id)
-                .ok_or(format!("Symbol `{}` not found", id))?;
+            let func = env.get(&id).ok_or(format!("Symbol `{}` not found", id))?;
 
             let mut arg_values: Vec<Rc<LispValue>> = vec![];
-             for expression_result in list
-                .iter()
-                .map(|expr| eval_expression(expr, env.clone())) {
-                    arg_values.push(expression_result?);
-                };
+            for expression_result in list.iter().map(|expr| eval_expression(expr, env.clone())) {
+                arg_values.push(expression_result?);
+            }
 
             match *func {
                 LispValue::Intrinsic(ref func) => {
@@ -103,7 +102,7 @@ pub fn eval_list(list: &[Expr], env: Rc<Env>) -> Result<Rc<LispValue>, String> {
                     debug!("eval_list END FUNC {:?}", res);
                     res
                 }
-                _ => Err(format!("Unexpected Value in the Function name position")),
+                _ => Err("Unexpected Value in the Function name position".to_string()),
             }
         }
         //Expr::List(ref list) =>  {
@@ -122,9 +121,7 @@ pub fn eval_atom(atom: &Atom, env: Rc<Env>) -> Result<Rc<LispValue>, String> {
         Atom::Id(id) => match id.as_str() {
             "true" => Ok(Rc::new(LispValue::Bool(Bool::True))),
             "false" => Ok(Rc::new(LispValue::Bool(Bool::False))),
-            _ => env
-                .get(&id)
-                .ok_or(format!("Symbol {} not found", id))
+            _ => env.get(&id).ok_or(format!("Symbol {} not found", id)),
         },
     }
 }
@@ -141,7 +138,11 @@ pub fn eval_define_function(
     Ok(Rc::new(LispValue::Nill))
 }
 
-pub fn eval_define_variable(var_name: &str, var_value: &Expr, env: Rc<Env>) -> Result<Rc<LispValue>, String> {
+pub fn eval_define_variable(
+    var_name: &str,
+    var_value: &Expr,
+    env: Rc<Env>,
+) -> Result<Rc<LispValue>, String> {
     let value = eval_expression(var_value, env.clone())?;
     env.set(var_name.to_string(), value);
 
@@ -168,7 +169,7 @@ pub fn eval_if(
         }
     } else {
         //TODO
-        Err(format!("Still don't know how to coerce"))
+        Err("Still don\'t know how to coerce".to_string())
     }
 }
 
