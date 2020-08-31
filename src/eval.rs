@@ -15,7 +15,7 @@ use crate::ast::{Atom, Expr};
 use crate::env::Env;
 use crate::grammar;
 
-pub fn eval(source: &str) -> Vec<Rc<LispValue>> {
+pub fn eval(source: &str) -> Vec<Result<Rc<LispValue>, String>> {
     debug!("eval {:?}", source);
     let parser = grammar::ProgramParser::new();
     let result = parser.parse(source);
@@ -30,23 +30,16 @@ pub fn eval(source: &str) -> Vec<Rc<LispValue>> {
     result
 }
 
-pub fn eval_program(program: &[Expr], env: Rc<Env>) -> Vec<Rc<LispValue>> {
+pub fn eval_program(program: &[Expr], env: Rc<Env>) -> Vec<Result<Rc<LispValue>, String>> {
     debug!("eval {:?}", program);
 
-    let result: Vec<Rc<LispValue>> = program
-        .iter()
-        .map(|expr| eval_expression(expr, env.clone()))
-        .collect();
-
-    //for res in &result {
-    //println!("RESULT {:?}", res)
-    //}
+    let result: Vec<Result<Rc<LispValue>, String>> = program .iter() .map(|expr| eval_expression(expr, env.clone())).collect();
 
     debug!("eval_program END");
     result
 }
 
-pub fn eval_expression(expression: &Expr, env: Rc<Env>) -> Rc<LispValue> {
+pub fn eval_expression(expression: &Expr, env: Rc<Env>) -> Result<Rc<LispValue>, String> {
     debug!("eval_expression {:?}", expression);
 
     let result = match expression {
@@ -67,10 +60,10 @@ pub fn eval_expression(expression: &Expr, env: Rc<Env>) -> Rc<LispValue> {
     result
 }
 
-pub fn eval_list(list: &[Expr], env: Rc<Env>) -> Rc<LispValue> {
+pub fn eval_list(list: &[Expr], env: Rc<Env>) -> Result<Rc<LispValue>, String> {
     debug!("eval_list {:?}", list);
     if list.is_empty() {
-        return Rc::new(LispValue::Nill);
+        return Ok(Rc::new(LispValue::Nill));
     }
 
     let mut list = list.to_vec();
@@ -78,20 +71,31 @@ pub fn eval_list(list: &[Expr], env: Rc<Env>) -> Rc<LispValue> {
 
     match first {
         Expr::Atom(atom) => {
-            let id = atom.expect_id("Unexpected non id");
+            //TODO
+
+            let id = if let Atom::Id(id) = atom {
+                  id
+                } else {
+                    return Err(format!("unexpected non id {:?}", atom))
+            };
+
             let func = env
                 .get(&id)
-                .unwrap_or_else(|| panic!("Symbol `{}` not found", id));
-            let arg_values: Vec<Rc<LispValue>> = list
+                .ok_or(format!("Symbol `{}` not found", id))?;
+
+            let mut arg_values: Vec<Rc<LispValue>> = vec![];
+             for expression_result in list
                 .iter()
-                .map(|expr| eval_expression(expr, env.clone()))
-                .collect();
+                .map(|expr| eval_expression(expr, env.clone())) {
+                    arg_values.push(expression_result?);
+                };
 
             match *func {
                 LispValue::Intrinsic(ref func) => {
+                    //TODO instrincis need to return a Result
                     let res = func(&arg_values);
                     debug!("eval_list END Intrinsice {:?}", res);
-                    res
+                    Ok(res)
                 }
 
                 LispValue::Func(ref func) => {
@@ -99,7 +103,7 @@ pub fn eval_list(list: &[Expr], env: Rc<Env>) -> Rc<LispValue> {
                     debug!("eval_list END FUNC {:?}", res);
                     res
                 }
-                _ => panic!("Unexpected Value in the Function name position"),
+                _ => Err(format!("Unexpected Value in the Function name position")),
             }
         }
         //Expr::List(ref list) =>  {
@@ -107,20 +111,20 @@ pub fn eval_list(list: &[Expr], env: Rc<Env>) -> Rc<LispValue> {
         // and do something
         //let first = eval_list()
         //}
-        _ => panic!("Unhandled"),
+        _ => Err("Unhandled".to_string()),
     }
 }
 
-pub fn eval_atom(atom: &Atom, env: Rc<Env>) -> Rc<LispValue> {
+pub fn eval_atom(atom: &Atom, env: Rc<Env>) -> Result<Rc<LispValue>, String> {
     debug!("eval_atom {:?}", atom);
     match atom {
-        Atom::Int(num) => Rc::new(LispValue::Int(*num)),
+        Atom::Int(num) => Ok(Rc::new(LispValue::Int(*num))),
         Atom::Id(id) => match id.as_str() {
-            "true" => Rc::new(LispValue::Bool(Bool::True)),
-            "false" => Rc::new(LispValue::Bool(Bool::False)),
+            "true" => Ok(Rc::new(LispValue::Bool(Bool::True))),
+            "false" => Ok(Rc::new(LispValue::Bool(Bool::False))),
             _ => env
                 .get(&id)
-                .unwrap_or_else(|| panic!("Symbol {} not found", id)),
+                .ok_or(format!("Symbol {} not found", id))
         },
     }
 }
@@ -130,18 +134,18 @@ pub fn eval_define_function(
     arg_names: Vec<String>,
     body: Vec<Expr>,
     env: Rc<Env>,
-) -> Rc<LispValue> {
+) -> Result<Rc<LispValue>, String> {
     let func = Func::new(fn_name, arg_names, body, env.clone());
     env.set(func.get_name().clone(), Rc::new(LispValue::Func(func)));
 
-    Rc::new(LispValue::Nill)
+    Ok(Rc::new(LispValue::Nill))
 }
 
-pub fn eval_define_variable(var_name: &str, var_value: &Expr, env: Rc<Env>) -> Rc<LispValue> {
-    let value = eval_expression(var_value, env.clone());
+pub fn eval_define_variable(var_name: &str, var_value: &Expr, env: Rc<Env>) -> Result<Rc<LispValue>, String> {
+    let value = eval_expression(var_value, env.clone())?;
     env.set(var_name.to_string(), value);
 
-    Rc::new(LispValue::Nill)
+    Ok(Rc::new(LispValue::Nill))
 }
 
 pub fn eval_if(
@@ -149,21 +153,22 @@ pub fn eval_if(
     positive: &Expr,
     negative: &Option<Expr>,
     env: Rc<Env>,
-) -> Rc<LispValue> {
-    let cond_value = eval_expression(cond, env.clone());
+) -> Result<Rc<LispValue>, String> {
+    let cond_value = eval_expression(cond, env.clone())?;
     if let LispValue::Bool(ref value) = *cond_value {
         match value {
             Bool::True => eval_expression(positive, env),
             Bool::False => {
                 if negative.is_none() {
-                    return Rc::new(LispValue::Nill);
+                    return Ok(Rc::new(LispValue::Nill));
                 }
 
                 eval_expression(negative.as_ref().unwrap(), env)
             }
         }
     } else {
-        panic!("Still don't know how to coerce")
+        //TODO
+        Err(format!("Still don't know how to coerce"))
     }
 }
 

@@ -9,6 +9,8 @@ use crate::ast::Expr;
 use crate::env::Env;
 use crate::eval::eval_expression;
 
+//TODO rename this to value
+
 #[derive(Clone)]
 pub enum LispValue {
     Nill,
@@ -107,17 +109,17 @@ impl Func {
         }
     }
 
-    pub fn call(&self, arg_values: Vec<Rc<LispValue>>) -> Rc<LispValue> {
+    pub fn call(&self, arg_values: Vec<Rc<LispValue>>) -> Result<Rc<LispValue>, String> {
         let local_env: HashMap<String, Rc<LispValue>> =
             self.arg_names.clone().into_iter().zip(arg_values).collect();
 
         let env = Rc::new(self.env.new(self.env.clone(), local_env));
 
         // TODO evaluate multiple Expr bodies
-        let result = eval_expression(&self.body[0], env.clone());
+        let result = eval_expression(&self.body[0], env.clone())?;
         debug!("func call {:?}", env);
         debug!("func result {:?}", result);
-        result
+        Ok(result)
     }
 
     pub fn get_name(&self) -> &String {

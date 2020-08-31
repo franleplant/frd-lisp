@@ -15,7 +15,8 @@ mod eval;
 mod intrinsics;
 pub mod lisp_value;
 
-pub fn eval_file(file_name: &str) -> Vec<Rc<lisp_value::LispValue>> {
+// TODO move elsewhere
+pub fn eval_file(file_name: &str) -> Vec<Result<Rc<lisp_value::LispValue>, String>> {
     use std::fs::File;
     use std::io::prelude::*;
 
@@ -30,7 +31,7 @@ pub fn eval_file(file_name: &str) -> Vec<Rc<lisp_value::LispValue>> {
 fn main_test() {
     let _ = env_logger::try_init();
 
-    fn eval_with_debugs(source: &str) -> Vec<Rc<lisp_value::LispValue>> {
+    fn eval_with_debugs(source: &str) -> Vec<Result<Rc<lisp_value::LispValue>, String>> {
         println!("SOURCE {:?}", source);
         // PARSE
         let parser = grammar::ProgramParser::new();
